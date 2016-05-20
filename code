@@ -1,0 +1,111 @@
+#define motorPin1a 3 // Marche avant du premier moteur//actionneur 1ere mouteur Avant
+#define motorPin1b 4 // Marche arrière du premier moteur//actionneur 1ere moteur Arriere
+#define M2a 10
+#define M2b 11
+#define speedPin1 9 // L293D enable pin pour le premier moteur //Pin de controleur qui  active mouteur 1
+#define speedPin2 5 // L293D enable pin pour le 2eme moteur
+//Bouton D'arret
+#define Go 12
+#define Stop 13
+// capteur à ultrasons:
+#define trig 6
+#define echo 7
+
+
+
+int val = HIGH;
+int val1 = 0;
+int a;
+int Mspeed = 0;  // a variable to hold the current speed value
+int seuil = 30; // distance minimale pour laquelle on accepte un obstacle
+int distance =0;
+boolean sensRotation;
+long temps;
+ 
+void look (void){  // évaluation de la distance de l'obstacle
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  temps = pulseIn(echo,HIGH);
+  distance = temps * 340/(2*10000); // pourquoi cette vitesse ?
+
+  }
+
+
+void setup() {
+ 
+  // réglage des broches à output
+  pinMode(motorPin1a, OUTPUT);// configurer Actionneur M1Avant en sortie
+  pinMode(motorPin1b, OUTPUT);
+  pinMode(speedPin1, OUTPUT);
+  pinMode(Go, OUTPUT);
+   pinMode(M2a, OUTPUT);
+   pinMode(M2b, OUTPUT);
+  pinMode(trig, OUTPUT); 
+  pinMode(echo, INPUT);
+  digitalWrite(trig, LOW); 
+  
+  // on choisit aléatoirement le sens de la rotation
+   look ();
+  randomSeed(distance);
+  sensRotation = random(2);
+}
+
+
+
+void loop() {
+  Mspeed = 700; // vitesse du moteur 0 à 1023
+   look();  // y a-t-il un obstacle devant?
+  // il n y a pas d'obstacle devant moi selon la distance de seuil// marche avant:  Moteur activé en avant
+  digitalWrite(Go, LOW);
+  while (true) {
+    if (digitalRead(Stop) == LOW) {
+      a = a + 1;
+      while (digitalRead(Stop) == LOW) {}
+      if (a == 1) {
+        analogWrite(speedPin1, Mspeed);// le contrleur active le moteur 1  avec une vitesse de700
+        digitalWrite(motorPin1a, HIGH); // le moteur 1 marche en avant ==> Actionneur M1A active (hight)
+        digitalWrite(motorPin1b, LOW); //le moteur 1 Marche ne marche pas en arriére ==> Actionneur M1Ar désactivé
+   if (distance > seuil){
+       while(distance > seuil){
+        look();
+        
+       }
+   }
+       if (distance <= seuil){
+// obstacle confirmé, on tourne sur place
+        analogWrite(speedPin1, Mspeed);// le contrleur active le moteur 1  avec une vitesse de700
+        analogWrite(speedPin1, Mspeed); //moteur 1 est activé pour etre  utilisé
+        digitalWrite(motorPin1a,  HIGH); //moteur 1 reste en avant  avant un sens de rotation
+        digitalWrite(motorPin1b, LOW);
+        analogWrite(speedPin2, Mspeed); // le moteur 2 FAIT DIVIER le sens==> Actionneur M1A active (hight)
+        digitalWrite(M2a, HIGH);
+        digitalWrite(M2b, LOW);
+        delay(2000);
+        analogWrite(speedPin2, Mspeed); // le moteur 2 FAIT DIVIER le sens==> Actionneur M1A active (hight)
+        digitalWrite(M2a, LOW);
+        digitalWrite(M2b, HIGH);
+        delay(2000);
+        analogWrite(speedPin2, Mspeed);
+        digitalWrite(M2a, LOW);
+        digitalWrite(M2b, LOW);
+        
+      }
+      }
+     if (a == 2) {
+        analogWrite(speedPin1, Mspeed);// le contrleur active le moteur 1  avec une vitesse de700
+        digitalWrite(motorPin1a, LOW); // le moteur 1 marche en avant ==> Actionneur M1A active (hight)
+        digitalWrite(motorPin1b, LOW); //le moteur 1 Marche ne marche pas en arriére ==> Actionneur M1Ar désactivé
+      }
+      if (a == 3)
+        a = 0;
+    }
+  }
+  }
+
+
+
+
+  
